@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>मेरा खाता बुक</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+        .section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .download-section { text-align: center; }
+        button { padding: 8px 12px; cursor: pointer; }
+    </style>
+</head>
+<body>
 
+    <h1>मेरा खाता बुक</h1>
+
+    <div class="section download-section">
+        <h2>डेटा एक्सपोर्ट करें</h2>
+        <p>सभी ग्राहकों और उनके लेन-देन का पूरा डेटा डाउनलोड करें।</p>
+        <button onclick="downloadExcel()">एक्सेल में डाउनलोड करें</button>
+    </div>
+
+    <div class="section">
+        <h2>नया ग्राहक जोड़ें</h2>
+        <input type="text" id="customerName" placeholder="ग्राहक का नाम">
+        <input type="text" id="customerPhone" placeholder="फोन नंबर">
+        <button onclick="addCustomer()">ग्राहक जोड़ें</button>
+    </div>
+
+    <div class="section">
+        <h2>लेन-देन जोड़ें</h2>
+        <select id="customerSelect"></select>
+        <input type="number" id="amount" placeholder="राशि">
+        <select id="type">
+            <option value="debit">आपने लिए (Debit)</option>
+            <option value="credit">आपने दिए (Credit)</option>
+        </select>
+        <input type="text" id="description" placeholder="विवरण (वैकल्पिक)">
+        <button onclick="addTransaction()">लेन-देन सहेजें</button>
+    </div>
+
+<script>
+    // ✨ नया फंक्शन: एक्सेल डाउनलोड करने के लिए ✨
+    function downloadExcel() {
+        window.location.href = '/export_excel';
+    }
+
+    // बाकी के JavaScript फंक्शन वैसे ही रहेंगे...
+    async function addCustomer() {
+        const name = document.getElementById('customerName').value;
+        const phone = document.getElementById('customerPhone').value;
+        const response = await fetch('/add_customer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+        const result = await response.json();
+        alert(result.message || result.error);
+        loadCustomers();
+    }
+
+    async function addTransaction() {
+        const customer_id = document.getElementById('customerSelect').value;
+        const amount = document.getElementById('amount').value;
+        const type = document.getElementById('type').value;
+        const description = document.getElementById('description').value;
+        const response = await fetch('/add_transaction', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customer_id, amount, type, description })
+        });
+        const result = await response.json();
+        alert(result.message);
+    }
+
+    async function loadCustomers() {
+        const response = await fetch('/get_customers');
+        const customers = await response.json();
+        const select = document.getElementById('customerSelect');
+        select.innerHTML = '';
+        customers.forEach(c => {
+            const option = document.createElement('option');
+            option.value = c.id;
+            option.textContent = `${c.name} (${c.phone})`;
+            select.appendChild(option);
+        });
+    }
+
+    window.onload = loadCustomers;
+</script>
+
+</body>
+</html>
