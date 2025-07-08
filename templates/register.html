@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>रजिस्टर करें</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3a7bd5;
+            --secondary-color: #3a6073;
+            --gradient-start: #11998e;
+            --gradient-end: #38ef7d;
+        }
+        body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .form-wrapper { background: white; padding: 40px 50px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+        h1 { margin-bottom: 30px; color: #333; font-weight: 600; }
+        .input-group { position: relative; margin-bottom: 25px; }
+        .input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa; }
+        input { width: 100%; padding: 12px 12px 12px 45px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-size: 16px; }
+        button { width: 100%; padding: 14px; background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end)); color: white; border: none; font-weight: 600; cursor: pointer; border-radius: 8px; font-size: 16px; letter-spacing: 1px; transition: transform 0.2s; }
+        button:hover { transform: translateY(-2px); }
+        .flash { padding: 12px; margin-bottom: 20px; border-radius: 8px; font-size: 14px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        a { color: var(--primary-color); text-decoration: none; margin-top: 20px; display: inline-block; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="form-wrapper">
+        <h1>Create Account</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="post">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Choose a username" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Create a strong password" required>
+            </div>
+            <button type="submit">SIGN UP</button>
+        </form>
+        <a href="{{ url_for('login') }}">Already have an account? Login</a>
+    </div>
+</body>
+</html>
