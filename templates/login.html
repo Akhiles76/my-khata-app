@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>लॉगइन करें</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3a7bd5;
+            --secondary-color: #3a6073;
+            --gradient-start: #4e54c8;
+            --gradient-end: #8f94fb;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .form-wrapper {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 600;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
+        input {
+            width: 100%;
+            padding: 12px 12px 12px 45px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            letter-spacing: 1px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .flash {
+            padding: 12px; margin-bottom: 20px; border-radius: 8px; font-size: 14px;
+        }
+        .flash.error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+        .flash.success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+            font-size: 14px;
+        }
+        .social-login { margin-top: 30px; }
+        .social-login p { color: #aaa; }
+        .social-icons { display: flex; justify-content: center; gap: 20px; }
+        .social-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; text-decoration: none; font-size: 18px; }
+        .facebook { background: #3b5998; }
+        .twitter { background: #1da1f2; }
+        .google { background: #db4437; }
+    </style>
+</head>
+<body>
+    <div class="form-wrapper">
+        <h1>Login</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="post">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <button type="submit">LOGIN</button>
+        </form>
+        <a href="{{ url_for('register') }}">Don't have an account? Sign Up</a>
+        <div class="social-login">
+            <p>Or Sign Up Using</p>
+            <div class="social-icons">
+                <a href="#" class="social-icon facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-icon twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon google"><i class="fab fa-google"></i></a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
