@@ -36,6 +36,10 @@
         .action-buttons button { width: auto; font-size: 12px; padding: 6px 10px; margin-left: 5px; }
         .btn-edit { background-color: #f0ad4e; }
         .btn-delete { background-color: var(--red); }
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -49,7 +53,7 @@
     <main>
         <div class="card">
             <div class="card-body">
-                <a href="/all_transactions"><button class="btn-secondary">सभी लेन-देन की रिपोर्ट देखें</button></a>
+                <a href="/all_transactions" style="text-decoration:none;"><button class="btn-secondary">सभी लेन-देन की रिपोर्ट देखें</button></a>
             </div>
         </div>
         
@@ -94,10 +98,145 @@
             </div>
         </div>
     </main>
+    
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>लेन-देन एडिट करें</h2>
+            <form id="editTransactionForm">
+                <input type="hidden" id="editTransactionId">
+                <label for="editAmount">राशि:</label>
+                <input type="number" id="editAmount" required step="0.01">
+                <label for="editType">प्रकार:</label>
+                <select id="editType" required>
+                    <option value="debit">आपने लिए (Debit)</option>
+                    <option value="credit">आपने दिए (Credit)</option>
+                </select>
+                <label for="editDescription">विवरण:</label>
+                <input type="text" id="editDescription">
+                <button type="submit" class="btn-primary">बदलाव सहेजें</button>
+            </form>
+        </div>
+    </div>
 
     <script>
-        // All JavaScript from the previous `index.html` file goes here.
-        // It does not need any changes.
+        const API = {
+            get: (url) => fetch(url).then(res => res.json()),
+            post: (url, data) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(res => res.json()),
+            put: (url, data) => fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(res => res.json()),
+            delete: (url) => fetch(url, { method: 'DELETE' }).then(res => res.json()),
+        };
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCustomers();
+            document.getElementById('addCustomerForm').addEventListener('submit', addCustomer);
+            document.getElementById('addTransactionForm').addEventListener('submit', addTransaction);
+            document.getElementById('editTransactionForm').addEventListener('submit', handleUpdateTransaction);
+        });
+        function populateCustomerSelect(customers) {
+            const select = document.getElementById('customerSelect');
+            select.innerHTML = '<option value="">-- कोई ग्राहक चुनें --</option>';
+            customers.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = `${c.name} (${c.phone})`;
+                select.appendChild(option);
+            });
+        }
+        async function loadCustomers() {
+            const customers = await API.get('/customers');
+            populateCustomerSelect(customers);
+        }
+        async function searchCustomers() {
+            const query = document.getElementById('searchCustomerInput').value;
+            const customers = await API.get(`/search_customers?query=${query}`);
+            populateCustomerSelect(customers);
+        }
+        async function viewCustomerTransactions() {
+            const customerId = document.getElementById('customerSelect').value;
+            const transactionSection = document.getElementById('transaction-section');
+            const listCard = document.getElementById('transactions-list-card');
+            const outputDiv = document.getElementById('transactions-output');
+            if (!customerId) {
+                transactionSection.style.display = 'none';
+                listCard.style.display = 'none';
+                return;
+            }
+            document.getElementById('transactionCustomerId').value = customerId;
+            transactionSection.style.display = 'block';
+            listCard.style.display = 'block';
+
+            const transactions = await API.get(`/customer/${customerId}/transactions`);
+            let html = '<ul>';
+            if (transactions.length === 0) {
+                html += '<li>अभी कोई लेन-देन नहीं है।</li>';
+            } else {
+                transactions.forEach(t => {
+                    const transactionDate = new Date(t.timestamp).toLocaleDateString('hi-IN');
+                    html += `
+                        <li>
+                            <div>
+                                <strong class="amount ${t.type}">${t.type === 'credit' ? 'दिए' : 'लिए'}: ₹${t.amount}</strong>
+                                <br><small>${t.description || 'कोई विवरण नहीं'} - ${transactionDate}</small>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-edit" onclick="openEditModal(${t.id}, ${t.amount}, '${t.type}', '${t.description || ''}')">एडिट</button>
+                                <button class="btn-delete" onclick="handleDeleteTransaction(${t.id})">डिलीट</button>
+                            </div>
+                        </li>`;
+                });
+            }
+            html += '</ul>';
+            outputDiv.innerHTML = html;
+        }
+        async function addCustomer(e) {
+            e.preventDefault();
+            const data = { name: document.getElementById('customerName').value, phone: document.getElementById('customerPhone').value };
+            const result = await API.post('/add_customer', data);
+            alert(result.message || result.error);
+            if (!result.error) {
+                document.getElementById('addCustomerForm').reset();
+                loadCustomers();
+            }
+        }
+        async function addTransaction(e) {
+            e.preventDefault();
+            const data = {
+                customer_id: document.getElementById('transactionCustomerId').value,
+                amount: document.getElementById('amount').value,
+                type: document.getElementById('type').value,
+                description: document.getElementById('description').value,
+            };
+            const result = await API.post('/add_transaction', data);
+            alert(result.message);
+            document.getElementById('addTransactionForm').reset();
+            viewCustomerTransactions();
+        }
+        async function handleDeleteTransaction(transactionId) {
+            if (confirm('क्या आप वाकई इस लेन-देन को डिलीट करना चाहते हैं?')) {
+                const result = await API.delete(`/transaction/${transactionId}`);
+                alert(result.message);
+                viewCustomerTransactions();
+            }
+        }
+        const modal = document.getElementById('editModal');
+        function openEditModal(id, amount, type, description) {
+            document.getElementById('editTransactionId').value = id;
+            document.getElementById('editAmount').value = amount;
+            document.getElementById('editType').value = type;
+            document.getElementById('editDescription').value = description;
+            modal.style.display = "block";
+        }
+        function closeModal() { modal.style.display = "none"; }
+        async function handleUpdateTransaction(e) {
+            e.preventDefault();
+            const transactionId = document.getElementById('editTransactionId').value;
+            const data = { amount: document.getElementById('editAmount').value, type: document.getElementById('editType').value, description: document.getElementById('editDescription').value };
+            const result = await API.put(`/transaction/${transactionId}`, data);
+            alert(result.message);
+            closeModal();
+            viewCustomerTransactions();
+        }
+        window.onclick = function(event) { if (event.target == modal) { closeModal(); } }
     </script>
 </body>
 </html>
